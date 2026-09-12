@@ -23,6 +23,10 @@ The app supports data streaming from Polar watches, however, specific setup step
 
 The `code_examples/` directory contains sample code for processing recorded data in Python and R. More examples will be added over time, contributions are welcome!
 
+## ECG Analysis & Reporting
+
+The `external_output_processor/` directory contains a Python toolkit for analyzing ECG recordings exported from the app. It detects R-peaks, computes time/frequency/non-linear HRV metrics, flags arrhythmias and ectopic beats, and generates an interactive standalone HTML report. See [external_output_processor/README.md](external_output_processor/README.md) for usage.
+
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
