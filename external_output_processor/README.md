@@ -15,7 +15,7 @@ A clinical and sports-science grade Python toolkit for analyzing, plotting, and 
 python3 ecg_tool.py ECG.jsonl
 ```
 This will:
-- Parse and filter the raw 130 Hz ECG signal (removing baseline wander & 50Hz mains hum).
+- Parse and filter the raw 130 Hz ECG signal (removing baseline wander & mains-frequency hum). ECG leads pick up ambient 50/60Hz interference from nearby AC wiring/equipment regardless of whether the recording device itself is battery-powered, so both 50Hz and 60Hz are notched by default — override with `--notch <freq> [freq ...]` if you know your region (e.g. `--notch 60` for US/other 60Hz-mains regions).
 - Detect QRS complexes and R-peaks with millisecond precision.
 - Compute complete **Time-Domain**, **Frequency-Domain (Welch PSD)**, and **Non-Linear (Poincaré)** HRV metrics.
 - Print a formatted summary table in your terminal.
@@ -117,7 +117,7 @@ from ecg_visualizer import ECGVisualizer
 
 # 1. Load and process
 analyzer = ECGAnalyzer("ECG.jsonl")
-analyzer.filter_signal(lowcut=0.5, highcut=40.0, notch_freq=50.0)
+analyzer.filter_signal(lowcut=0.5, highcut=40.0, notch_freq=(50.0, 60.0))
 analyzer.detect_r_peaks()
 hrv = analyzer.compute_hrv_and_morphology()
 

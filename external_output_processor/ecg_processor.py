@@ -8,7 +8,7 @@ and analyzes beat morphology.
 import json
 import os
 import math
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Dict, Any, List, Optional, Sequence, Tuple, Union
 from dataclasses import dataclass, field
 from datetime import datetime
 
@@ -329,12 +329,19 @@ class ECGAnalyzer:
         self,
         lowcut: float = 0.5,
         highcut: float = 40.0,
-        notch_freq: Optional[float] = 50.0,
+        notch_freq: Optional[Union[float, Sequence[float]]] = (50.0, 60.0),
         notch_q: float = 30.0
     ) -> np.ndarray:
         """
         Apply zero-phase Butterworth bandpass filter to remove baseline wander
-        and high-frequency muscle noise, plus an optional mains notch filter (50Hz or 60Hz).
+        and high-frequency muscle noise, plus mains hum notch filter(s).
+
+        Ambient 50/60Hz interference is picked up by the ECG leads themselves
+        (they act as antennas for nearby AC wiring/equipment) regardless of
+        whether the recording device is battery-powered, so both mains
+        frequencies are notched by default since the recording region isn't
+        known ahead of time. Pass a single frequency (e.g. 60.0) or a list to
+        override.
         """
         fs = self.metadata.sampling_rate_hz
         nyq = 0.5 * fs
@@ -345,14 +352,16 @@ class ECGAnalyzer:
         effective_highcut = min(highcut, nyq - 1.0)
         low = max(0.1, lowcut) / nyq
         high = effective_highcut / nyq
-        
+
         sos_bp = signal.butter(2, [low, high], btype="bandpass", output="sos")
         filtered = signal.sosfiltfilt(sos_bp, sig)
 
-        # Notch filter for mains hum (if within Nyquist)
-        if notch_freq and 0 < notch_freq < nyq:
-            b_notch, a_notch = signal.iirnotch(notch_freq, notch_q, fs=fs)
-            filtered = signal.filtfilt(b_notch, a_notch, filtered)
+        # Notch filter(s) for mains hum (each, if within Nyquist)
+        notch_freqs = [notch_freq] if isinstance(notch_freq, (int, float)) else (notch_freq or [])
+        for freq in notch_freqs:
+            if freq and 0 < freq < nyq:
+                b_notch, a_notch = signal.iirnotch(freq, notch_q, fs=fs)
+                filtered = signal.filtfilt(b_notch, a_notch, filtered)
 
         self.filtered_voltages = filtered
         return self.filtered_voltages

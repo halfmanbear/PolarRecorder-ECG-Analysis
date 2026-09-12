@@ -19,7 +19,7 @@ import webbrowser
 import http.server
 import socketserver
 import urllib.parse
-from typing import List
+from typing import List, Optional, Sequence, Union
 
 from ecg_processor import ECGAnalyzer, RICH_AVAILABLE
 from ecg_visualizer import ECGVisualizer
@@ -30,7 +30,7 @@ def process_file(
     output_html: Optional[str] = None,
     export_csv: Optional[str] = None,
     trend_csv: Optional[str] = None,
-    notch_freq: float = 50.0,
+    notch_freq: Union[float, Sequence[float]] = (50.0, 60.0),
     dark_mode: bool = True,
     auto_open: bool = True
 ) -> str:
@@ -230,7 +230,7 @@ def main():
     parser.add_argument("-o", "--output", help="Path for output HTML dashboard (default: <name>_report.html)")
     parser.add_argument("--csv", help="Optional path to export RR intervals and instant HR to CSV")
     parser.add_argument("--trend-csv", help="Optional path to export the 5-min windowed HRV trend to CSV (for 24h day/night trending)")
-    parser.add_argument("--notch", type=float, default=50.0, help="Mains hum notch filter frequency in Hz (default: 50.0)")
+    parser.add_argument("--notch", type=float, nargs="+", default=[50.0, 60.0], help="Mains hum notch filter frequency/frequencies in Hz (default: 50.0 60.0, covering both mains regions since the recording region isn't known ahead of time)")
     parser.add_argument("--no-open", action="store_true", help="Do not automatically open report in default browser")
     parser.add_argument("--light", action="store_true", help="Use light theme for generated report")
     parser.add_argument("--batch", nargs="+", help="Batch analyze and compare multiple .jsonl files separately")
